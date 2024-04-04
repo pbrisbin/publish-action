@@ -30,7 +30,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postMessageToSlack = exports.updateTag = exports.validateIfReleaseIsPublished = void 0;
+exports.postMessageToSlack = exports.updateTag = exports.validateIfReleaseIsPublished = exports.getTagSHA = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const http_client_1 = __nccwpck_require__(6255);
@@ -58,6 +58,7 @@ async function getTagSHA(tag, octokitClient) {
     }
     return foundTag.object.sha;
 }
+exports.getTagSHA = getTagSHA;
 async function validateIfReleaseIsPublished(tag, octokitClient) {
     try {
         const { data: foundRelease } = await octokitClient.rest.repos.getReleaseByTag({
@@ -78,8 +79,7 @@ async function validateIfReleaseIsPublished(tag, octokitClient) {
     }
 }
 exports.validateIfReleaseIsPublished = validateIfReleaseIsPublished;
-async function updateTag(sourceTag, targetTag, octokitClient) {
-    const sourceTagSHA = await getTagSHA(sourceTag, octokitClient);
+async function updateTag(sourceTag, sourceTagSHA, targetTag, octokitClient) {
     const foundTargetTag = await findTag(targetTag, octokitClient);
     const refName = `tags/${targetTag}`;
     if (foundTargetTag) {
@@ -152,12 +152,20 @@ async function run() {
         const sourceTagName = core.getInput('source-tag');
         (0, version_utils_1.validateSemverVersionFromTag)(sourceTagName);
         await (0, api_utils_1.validateIfReleaseIsPublished)(sourceTagName, octokitClient);
+        const sourceTagSHA = await (0, api_utils_1.getTagSHA)(sourceTagName, octokitClient);
         const majorTag = (0, version_utils_1.getMajorTagFromFullTag)(sourceTagName);
-        await (0, api_utils_1.updateTag)(sourceTagName, majorTag, octokitClient);
+        const doUpdate = core.getBooleanInput('update-tag');
+        core.setOutput('sha', sourceTagSHA);
         core.setOutput('major-tag', majorTag);
-        core.info(`The '${majorTag}' major tag now points to the '${sourceTagName}' tag`);
-        const slackMessage = `The ${majorTag} tag has been successfully updated for the ${github_1.context.repo.repo} action to include changes from ${sourceTagName}`;
-        await reportStatusToSlack(slackMessage);
+        if (doUpdate) {
+            await (0, api_utils_1.updateTag)(sourceTagSHA, sourceTagName, majorTag, octokitClient);
+            core.info(`The '${majorTag}' major tag now points to the '${sourceTagName}' tag`);
+            const slackMessage = `The ${majorTag} tag has been successfully updated for the ${github_1.context.repo.repo} action to include changes from ${sourceTagName}`;
+            await reportStatusToSlack(slackMessage);
+        }
+        else {
+            core.info(`The '${majorTag}' major tag update to '${sourceTagName}' was skipped`);
+        }
     }
     catch (error) {
         core.setFailed(error.message);
