@@ -14,9 +14,9 @@ import {
 
 async function run(): Promise<void> {
   try {
-    const token = core.getInput('token');
+    const token = core.getInput('token', {required: true});
     const octokitClient = github.getOctokit(token);
-    const sourceTagName = core.getInput('source-tag');
+    const sourceTagName = core.getInput('source-tag', {required: true});
 
     validateSemverVersionFromTag(sourceTagName);
 
