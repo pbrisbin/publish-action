@@ -147,9 +147,9 @@ const api_utils_1 = __nccwpck_require__(2430);
 const version_utils_1 = __nccwpck_require__(1534);
 async function run() {
     try {
-        const token = core.getInput('token');
+        const token = core.getInput('token', { required: true });
         const octokitClient = github.getOctokit(token);
-        const sourceTagName = core.getInput('source-tag');
+        const sourceTagName = core.getInput('source-tag', { required: true });
         (0, version_utils_1.validateSemverVersionFromTag)(sourceTagName);
         await (0, api_utils_1.validateIfReleaseIsPublished)(sourceTagName, octokitClient);
         const sourceTagSHA = await (0, api_utils_1.getTagSHA)(sourceTagName, octokitClient);
