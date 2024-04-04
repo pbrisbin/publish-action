@@ -24,16 +24,25 @@ async function run(): Promise<void> {
 
     const sourceTagSHA = await getTagSHA(sourceTagName, octokitClient);
     const majorTag = getMajorTagFromFullTag(sourceTagName);
-    await updateTag(sourceTagSHA, sourceTagName, majorTag, octokitClient);
+    const doUpdate = core.getBooleanInput('update-tag');
 
     core.setOutput('sha', sourceTagSHA);
     core.setOutput('major-tag', majorTag);
-    core.info(
-      `The '${majorTag}' major tag now points to the '${sourceTagName}' tag`
-    );
 
-    const slackMessage = `The ${majorTag} tag has been successfully updated for the ${context.repo.repo} action to include changes from ${sourceTagName}`;
-    await reportStatusToSlack(slackMessage);
+    if (doUpdate) {
+      await updateTag(sourceTagSHA, sourceTagName, majorTag, octokitClient);
+
+      core.info(
+        `The '${majorTag}' major tag now points to the '${sourceTagName}' tag`
+      );
+
+      const slackMessage = `The ${majorTag} tag has been successfully updated for the ${context.repo.repo} action to include changes from ${sourceTagName}`;
+      await reportStatusToSlack(slackMessage);
+    } else {
+      core.info(
+        `The '${majorTag}' major tag update to '${sourceTagName}' was skipped`
+      );
+    }
   } catch (error) {
     core.setFailed((error as Error).message);
 

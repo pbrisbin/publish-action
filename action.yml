@@ -9,6 +9,9 @@ inputs:
   token:
     description: 'Token to get an authenticated Octokit'
     default: ${{ github.token }}
+  update-tag:
+    description: 'Actually update the tag'
+    default: true
 outputs:
   sha:
     description: 'The sha the given source-tag resolved to'
