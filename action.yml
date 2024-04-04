@@ -10,6 +10,8 @@ inputs:
     description: 'Token to get an authenticated Octokit'
     default: ${{ github.token }}
 outputs:
+  sha:
+    description: 'The sha the given source-tag resolved to'
   major-tag:
     description: 'The major version tag that has been updated (created). Examples: v1, 1'
 runs:

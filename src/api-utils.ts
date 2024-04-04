@@ -40,7 +40,7 @@ async function findTag(
   }
 }
 
-async function getTagSHA(
+export async function getTagSHA(
   tag: string,
   octokitClient: InstanceType<typeof GitHub>
 ): Promise<string> {
@@ -82,10 +82,10 @@ export async function validateIfReleaseIsPublished(
 
 export async function updateTag(
   sourceTag: string,
+  sourceTagSHA: string,
   targetTag: string,
   octokitClient: InstanceType<typeof GitHub>
 ): Promise<void> {
-  const sourceTagSHA = await getTagSHA(sourceTag, octokitClient);
   const foundTargetTag = await findTag(targetTag, octokitClient);
   const refName = `tags/${targetTag}`;
 

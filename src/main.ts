@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import * as github from '@actions/github';
 import {context} from '@actions/github';
 import {
+  getTagSHA,
   updateTag,
   validateIfReleaseIsPublished,
   postMessageToSlack
@@ -21,9 +22,11 @@ async function run(): Promise<void> {
 
     await validateIfReleaseIsPublished(sourceTagName, octokitClient);
 
+    const sourceTagSHA = await getTagSHA(sourceTagName, octokitClient);
     const majorTag = getMajorTagFromFullTag(sourceTagName);
-    await updateTag(sourceTagName, majorTag, octokitClient);
+    await updateTag(sourceTagSHA, sourceTagName, majorTag, octokitClient);
 
+    core.setOutput('sha', sourceTagSHA);
     core.setOutput('major-tag', majorTag);
     core.info(
       `The '${majorTag}' major tag now points to the '${sourceTagName}' tag`
